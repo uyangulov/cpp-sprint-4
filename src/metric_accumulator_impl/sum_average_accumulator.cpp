@@ -20,7 +20,7 @@
 namespace analyzer::metric_accumulator::metric_accumulator_impl {
 
 void SumAverageAccumulator::Accumulate(const metric::MetricResult &metric_result) {
-    sum += std::get<int>(metric_result.value);
+    sum += metric_result.value;
     count++;
 }
 void SumAverageAccumulator::Finalize() {

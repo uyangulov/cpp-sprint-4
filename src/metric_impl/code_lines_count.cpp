@@ -16,6 +16,7 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include "utils.hpp"
 
 namespace analyzer::metric::metric_impl {
 std::string CodeLinesCountMetric::Name() const { return kName; }
