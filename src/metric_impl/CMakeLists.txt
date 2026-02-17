@@ -15,10 +15,11 @@ target_link_libraries(${target}
         file
 )
 
-file(GLOB test_files "${CMAKE_CURRENT_SOURCE_DIR}/tests/files/*.py")
-foreach(file IN LISTS test_files)
-    get_filename_component(file_name ${file} NAME)
-    configure_file(${file} "${CMAKE_CURRENT_BINARY_DIR}/${file_name}" COPYONLY)
-endforeach()
+
+set(TEST_FILES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests/files")
+
+target_compile_definitions(${target} 
+    PRIVATE TEST_FILES_DIR="${TEST_FILES_DIR}"
+)
 
 add_test(NAME ${target} COMMAND ${target})
