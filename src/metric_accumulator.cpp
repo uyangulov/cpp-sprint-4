@@ -47,9 +47,7 @@ void MetricsAccumulator::AccumulateNextFunctionResults(const std::vector<metric:
  * который обнуляет накопленные значения (сумму, счётчик и т.д.).
  */
 void MetricsAccumulator::ResetAccumulators() {
-    for (const auto &[_, acc] : accumulators) {
-        acc->Reset();
-    }
+    std::ranges::for_each(accumulators | std::views::values, std::mem_fn(&IAccumulator::Reset));
 }
 
 }  // namespace analyzer::metric_accumulator
