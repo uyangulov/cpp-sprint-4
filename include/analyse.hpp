@@ -113,9 +113,13 @@ auto SplitByFiles(const auto &analysis) {
  *   (то есть по каждой функции и её метрикам).
  * - Передаёт результаты метрик (`elem.second`) в аккумулятор через `AccumulateNextFunctionResults`.
  */
-void AccumulateFunctionAnalysis(const auto &analysis,
+void AccumulateFunctionAnalysis(const AnalysisResult &analysis,
                                 const analyzer::metric_accumulator::MetricsAccumulator &accumulator) {
-    // здесь ваш код
+    for (const auto &elem : analysis) {
+        const auto func = elem.first;
+        const auto results = elem.second;
+        accumulator.AccumulateNextFunctionResults(results);
+    }
 }
 
 }  // namespace analyzer
