@@ -51,7 +51,7 @@ auto AnalyseFunctions(const std::vector<std::string> &filenames,
     | rv::transform([&](const auto &f) { return extractor.Get(f); }) 
     | rv::join 
     | rv::transform([&](const auto &func) { return std::make_pair(func, metric_extractor.Get(func)); }) 
-    | std::ranges::to<AnalysisResult>();
+    | rs::to<AnalysisResult>();
     // clang-format on
 }
 
@@ -81,7 +81,9 @@ auto SplitByClasses(const auto &analysis) {
            })
     | rv::chunk_by([](const auto &lhs, const auto &rhs) {  
                return lhs.first.class_name == rhs.first.class_name;
-           });
+           })
+    | rs::to<std::vector<AnalysisResult>>();
+
     // clang-format on
 }
 
@@ -101,7 +103,8 @@ auto SplitByFiles(const auto &analysis) {
            })
     | rv::chunk_by([](const auto &lhs, const auto &rhs) {  
                return lhs.first.filename == rhs.first.filename;
-           });
+           })
+    | rs::to<std::vector<AnalysisResult>>();
     // clang-format on
 }
 
