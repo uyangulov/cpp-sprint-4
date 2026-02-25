@@ -34,11 +34,12 @@ int main(int argc, char *argv[]) {
     if (!options.Parse(argc, argv))
         return 1;
 
+    using namespace analyzer::metric::metric_impl;
     analyzer::metric::MetricExtractor metric_extractor;
-    metric_extractor.RegisterMetric(std::make_unique<analyzer::metric::metric_impl::CyclomaticComplexityMetric>());
-    metric_extractor.RegisterMetric(std::make_unique<analyzer::metric::metric_impl::CodeLinesCountMetric>());
+    metric_extractor.RegisterMetric(std::make_unique<CyclomaticComplexityMetric>());
+    metric_extractor.RegisterMetric(std::make_unique<CodeLinesCountMetric>());
     // #metric_extractor.RegisterMetric(std::make_unique<NamingStyleMetric>());
-    // metric_extractor.RegisterMetric(std::make_unique<CountParametersMetric>());
+    metric_extractor.RegisterMetric(std::make_unique<CountParametersMetric>());
 
     auto analysis = analyzer::AnalyseFunctions(options.GetFiles(), metric_extractor);
 
@@ -56,11 +57,10 @@ int main(int argc, char *argv[]) {
 
     analyzer::metric_accumulator::MetricsAccumulator accumulator;
     using namespace analyzer::metric_accumulator::metric_accumulator_impl;
-    using namespace analyzer::metric::metric_impl;
     accumulator.RegisterAccumulator(CyclomaticComplexityMetric::kName, std::make_unique<SumAverageAccumulator>());
     // accumulator.RegisterAccumulator(NamingStyleMetric::kName, std::make_unique<CategoricalAccumulator>());
     accumulator.RegisterAccumulator(CodeLinesCountMetric::kName, std::make_unique<SumAverageAccumulator>());
-    // accumulator.RegisterAccumulator(CountParametersMetric::kName, std::make_unique<AverageAccumulator>());
+    accumulator.RegisterAccumulator(CountParametersMetric::kName, std::make_unique<AverageAccumulator>());
 
     auto print_accumulated_analysis = [](const auto &accumulator) {
         auto &cc_acc_metric =
@@ -79,9 +79,9 @@ int main(int argc, char *argv[]) {
         std::println("    Sum Code lines count: {}", cl_acc_metric.Get().sum);
         std::println("    Average Code lines count per function: {}", cl_acc_metric.Get().average);
 
-        // auto &cp_acc_metric =
-        //     accumulator.template GetFinalizedAccumulator<AverageAccumulator>(CountParametersMetric::kName);
-        // std::println("    Average Parameters count per function: {}", cp_acc_metric.Get());
+        auto &cp_acc_metric =
+            accumulator.template GetFinalizedAccumulator<AverageAccumulator>(CountParametersMetric::kName);
+        std::println("    Average Parameters count per function: {}", cp_acc_metric.Get());
     };
 
     auto analysis_by_files = analyzer::SplitByFiles(analysis);
@@ -104,9 +104,9 @@ int main(int argc, char *argv[]) {
         accumulator.ResetAccumulators();
     });
 
-    // analyzer::AccumulateFunctionAnalysis(analysis, accumulator);
-    // std::println();
-    // std::println("Accumulated Analysis for All Functions:");
-    // print_accumulated_analysis(accumulator);
-    // return 0;
+    analyzer::AccumulateFunctionAnalysis(analysis, accumulator);
+    std::println();
+    std::println("Accumulated Analysis for All Functions:");
+    print_accumulated_analysis(accumulator);
+    return 0;
 }
