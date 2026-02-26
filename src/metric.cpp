@@ -30,8 +30,12 @@ void MetricExtractor::RegisterMetric(std::unique_ptr<IMetric> metric) { metrics.
  * к переданной функции `func` и собирает результаты в вектор.
  */
 MetricResults MetricExtractor::Get(const function::Function &func) const {
-    // здесь ваш код
-    return {};
+    // clang-format off
+    analyzer::metric::MetricResults results(metrics.size());
+    return metrics 
+    | std::views::transform([&](const auto &m) {return m->Calculate(func);}) 
+    | std::ranges::to<MetricResults>();
+    // clang-format on
 }
 
 }  // namespace analyzer::metric

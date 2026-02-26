@@ -14,6 +14,7 @@
 #include <ranges>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -38,13 +39,24 @@ namespace rs = std::ranges;
  * 5. Для каждой функции вычисляет набор метрик через переданный `metric_extractor`.
  * 6. Возвращает вектор пар: (функция, результаты её метрик).
  */
-auto AnalyseFunctions(const std::vector<std::string> &files,
+using AnalysisResult = std::vector<std::pair<analyzer::function::Function, analyzer::metric::MetricResults>>;
+
+auto AnalyseFunctions(const std::vector<std::string> &filenames,
                       const analyzer::metric::MetricExtractor &metric_extractor) {
     // здесь ваш код
+    analyzer::function::FunctionExtractor extractor;
+    // clang-format off
+    return filenames 
+    | rv::transform([&](const auto &filename) { return analyzer::file::File(filename); }) 
+    | rv::transform([&](const auto &f) { return extractor.Get(f); }) 
+    | rv::join 
+    | rv::transform([&](const auto &func) { return std::make_pair(func, metric_extractor.Get(func)); }) 
+    | rs::to<AnalysisResult>();
+    // clang-format on
 }
 
 /**
- * 
+ *
  * @brief Группирует результаты анализа по классам.
  *
  * Эта функция:
@@ -62,7 +74,17 @@ auto AnalyseFunctions(const std::vector<std::string> &files,
  * действительно исчезают из результата.
  */
 auto SplitByClasses(const auto &analysis) {
-    // здесь ваш код
+    // clang-format off
+    return analysis 
+    | rv::filter([](const auto &p) {  
+               return p.first.class_name.has_value();
+           })
+    | rv::chunk_by([](const auto &lhs, const auto &rhs) {  
+               return lhs.first.class_name == rhs.first.class_name;
+           })
+    | rs::to<std::vector<AnalysisResult>>();
+
+    // clang-format on
 }
 
 /**
@@ -74,7 +96,16 @@ auto SplitByClasses(const auto &analysis) {
  * - Использует `chunk_by`, поэтому **порядок функций в `analysis` должен быть по файлам**.
  */
 auto SplitByFiles(const auto &analysis) {
-    // здесь ваш код
+    // clang-format off
+    return analysis 
+    | rv::filter([](const auto &p) {  
+               return p.first.class_name.has_value();
+           })
+    | rv::chunk_by([](const auto &lhs, const auto &rhs) {  
+               return lhs.first.filename == rhs.first.filename;
+           })
+    | rs::to<std::vector<AnalysisResult>>();
+    // clang-format on
 }
 
 /**
@@ -85,9 +116,11 @@ auto SplitByFiles(const auto &analysis) {
  *   (то есть по каждой функции и её метрикам).
  * - Передаёт результаты метрик (`elem.second`) в аккумулятор через `AccumulateNextFunctionResults`.
  */
-void AccumulateFunctionAnalysis(const auto &analysis,
+void AccumulateFunctionAnalysis(const AnalysisResult &analysis,
                                 const analyzer::metric_accumulator::MetricsAccumulator &accumulator) {
-    // здесь ваш код
+    std::ranges::for_each(
+        analysis, [&](const auto &results) { accumulator.AccumulateNextFunctionResults(results); },
+        [](const auto &pair) { return pair.second; });
 }
 
 }  // namespace analyzer
