@@ -118,11 +118,9 @@ auto SplitByFiles(const auto &analysis) {
  */
 void AccumulateFunctionAnalysis(const AnalysisResult &analysis,
                                 const analyzer::metric_accumulator::MetricsAccumulator &accumulator) {
-    for (const auto &elem : analysis) {
-        const auto func = elem.first;
-        const auto results = elem.second;
-        accumulator.AccumulateNextFunctionResults(results);
-    }
+    std::ranges::for_each(
+        analysis, [&](const auto &results) { accumulator.AccumulateNextFunctionResults(results); },
+        [](const auto &pair) { return pair.second; });
 }
 
 }  // namespace analyzer
