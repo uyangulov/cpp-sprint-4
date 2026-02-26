@@ -31,13 +31,12 @@ namespace analyzer::metric_accumulator {
  * - По этому имени в контейнере `accumulators` находится нужный аккумулятор.
  * - Вызывается метод `Accumulate(metric_result)`, который обновляет внутреннее состояние аккумулятора.
  */
+
 void MetricsAccumulator::AccumulateNextFunctionResults(const std::vector<metric::MetricResult> &metric_results) const {
-    for (const auto &metric_result : metric_results) {
-        auto name = metric_result.metric_name;
-        const auto val = metric_result.value;
-        const auto acc = accumulators.at(name);
-        acc->Accumulate(metric_result);
-    }
+    std::ranges::for_each(metric_results, [&](const auto &res) {
+        const auto acc = accumulators.at(res.metric_name);
+        acc->Accumulate(res);
+    });
 }
 /**
  * @brief Сбрасывает состояние всех аккумуляторов.
